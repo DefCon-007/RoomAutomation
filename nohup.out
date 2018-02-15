@@ -1,0 +1,41 @@
+[2017-11-15 02:24:25 +0000] [25164] [INFO] Starting gunicorn 19.6.0
+[2017-11-15 02:24:25 +0000] [25164] [ERROR] Connection in use: ('127.0.0.1', 8000)
+[2017-11-15 02:24:25 +0000] [25164] [ERROR] Retrying in 1 second.
+[2017-11-15 02:24:26 +0000] [25164] [ERROR] Connection in use: ('127.0.0.1', 8000)
+[2017-11-15 02:24:26 +0000] [25164] [ERROR] Retrying in 1 second.
+[2017-11-15 02:24:27 +0000] [25164] [ERROR] Connection in use: ('127.0.0.1', 8000)
+[2017-11-15 02:24:27 +0000] [25164] [ERROR] Retrying in 1 second.
+[2017-11-15 02:24:28 +0000] [25164] [ERROR] Connection in use: ('127.0.0.1', 8000)
+[2017-11-15 02:24:28 +0000] [25164] [ERROR] Retrying in 1 second.
+[2017-11-15 02:24:29 +0000] [25164] [ERROR] Connection in use: ('127.0.0.1', 8000)
+[2017-11-15 02:24:29 +0000] [25164] [ERROR] Retrying in 1 second.
+[2017-11-15 02:24:30 +0000] [25164] [ERROR] Can't connect to ('127.0.0.1', 8000)
+[2017-11-18 00:04:26 +0000] [20950] [INFO] Starting gunicorn 19.6.0
+[2017-11-18 00:04:26 +0000] [20950] [INFO] Listening at: http://127.0.0.1:8000 (20950)
+[2017-11-18 00:04:26 +0000] [20950] [INFO] Using worker: sync
+[2017-11-18 00:04:26 +0000] [20956] [INFO] Booting worker with pid: 20956
+[2017-11-18 00:04:52 +0000] [20950] [INFO] Handling signal: hup
+[2017-11-18 00:04:52 +0000] [20950] [INFO] Hang up: Master
+[2017-11-18 00:04:52 +0000] [20969] [INFO] Booting worker with pid: 20969
+[2017-11-18 01:02:42 +0000] [20950] [CRITICAL] WORKER TIMEOUT (pid:20969)
+[2017-11-18 01:02:42 +0000] [20969] [INFO] Worker exiting (pid: 20969)
+[2017-11-18 01:02:42 +0000] [22534] [INFO] Booting worker with pid: 22534
+[2017-11-25 00:22:31 +0000] [1338] [INFO] Starting gunicorn 19.6.0
+[2017-11-25 00:22:31 +0000] [1338] [INFO] Listening at: http://127.0.0.1:8000 (1338)
+[2017-11-25 00:22:31 +0000] [1338] [INFO] Using worker: sync
+[2017-11-25 00:22:31 +0000] [1353] [INFO] Booting worker with pid: 1353
+[2017-11-25 00:24:02 +0000] [1338] [INFO] Handling signal: int
+[2017-11-25 00:24:03 +0000] [1353] [INFO] Worker exiting (pid: 1353)
+[2017-11-25 00:24:03 +0000] [1338] [INFO] Shutting down: Master
+[2018-02-05 19:01:33 +0000] [1008] [INFO] Starting gunicorn 19.6.0
+[2018-02-05 19:01:33 +0000] [1008] [ERROR] Connection in use: ('127.0.0.1', 8000)
+[2018-02-05 19:01:33 +0000] [1008] [ERROR] Retrying in 1 second.
+[2018-02-05 19:01:34 +0000] [1008] [ERROR] Connection in use: ('127.0.0.1', 8000)
+[2018-02-05 19:01:34 +0000] [1008] [ERROR] Retrying in 1 second.
+[2018-02-05 19:01:35 +0000] [1008] [ERROR] Connection in use: ('127.0.0.1', 8000)
+[2018-02-05 19:01:35 +0000] [1008] [ERROR] Retrying in 1 second.
+[2018-02-05 19:01:36 +0000] [1008] [ERROR] Connection in use: ('127.0.0.1', 8000)
+[2018-02-05 19:01:36 +0000] [1008] [ERROR] Retrying in 1 second.
+[2018-02-05 19:01:37 +0000] [1008] [ERROR] Connection in use: ('127.0.0.1', 8000)
+[2018-02-05 19:01:37 +0000] [1008] [ERROR] Retrying in 1 second.
+[2018-02-05 19:01:38 +0000] [1008] [ERROR] Can't connect to ('127.0.0.1', 8000)

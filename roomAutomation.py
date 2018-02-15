@@ -15,19 +15,28 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-	return render_template('index.html')
+	return render_template('index.html',flag=0)
     # return "<h1>This flask app is running!</h1>"
 
 @app.route('/lumos')
 def tubelight():
-	GPIO.output(11,1)
-	return "<h1>Room in filled with Aura now !"
+	try : 
+		GPIO.output(11,1)
+	except RuntimeError : 
+		initialiseGPIO()
+		GPIO.output(11,1)
+
+	return render_template("index.html",flag=1)
 
 @app.route('/nox')
 def lamp():
-	GPIO.output(11,0)
-	return "<h1> Death eaters are arriving !!"
+	try : 
+		GPIO.output(11,0)
+	except RuntimeError :
+		initialiseGPIO()
+		GPIO.output(11,0)
+	return render_template("index.html",flag=1)
 
 
 if __name__ == '__main__':
-    app.run(port=8000)
+    app.run(port=8000,debug=True)

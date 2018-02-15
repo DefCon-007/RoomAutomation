@@ -1,33 +1,65 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-	<title>Privet Drive</title>
+    <title>Privet Drive</title>
+    <link rel='stylesheet prefetch' href='https://fonts.googleapis.com/css?family=Athiti:300,400'>
+    <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css'>
+    <style type="text/css">
+@font-face {
+    font-family: 'hp'; /*a name to be used later*/
+    src: url('static/font/MagicSchoolOne.ttf'); /*URL to font*/
+}
+
+
+html, body {
+  font-family: 'hp', sans-serif;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(https://i.ytimg.com/vi/h036iewRjx4/maxresdefault.jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+    #potter-animation {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        bottom: 50px;
+        z-index: 10;
+    }
+
+    ul { 
+        
+        color: #887023;
+        left: 50%;
+        font-family: 'hp';
+        list-style-type: none;
+  text-align: center;
+    }
+    li{
+font-size: 1000%;
+          cursor: pointer;
+  display: inline-block;
+  font-weight: bold;
+  padding-right: 15px;
+    }
+    </style>
 </head>
+
 <body>
-<script type="text/javascript">
-    var macAddress = "";
-    var ipAddress = "";
-    var computerName = "";
-    var wmi = GetObject("winmgmts:{impersonationLevel=impersonate}");
-    e = new Enumerator(wmi.ExecQuery("SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = True"));
-    for(; !e.atEnd(); e.moveNext()) {
-        var s = e.item(); 
-        macAddress = s.MACAddress;
-        ipAddress = s.IPAddress(0);
-        computerName = s.DNSHostName;
-    } 
-
-</script>
-<h1>    Welcome ! </h1>
-<input type="text" id="txtMACAdress" />
-<input type="text" id="txtIPAdress" />
-<input type="text" id="txtComputerName" />
-
-<script type="text/javascript">
-    document.getElementById("txtMACAdress").value = unescape(macAddress);
-    document.getElementById("txtIPAdress").value = unescape(ipAddress);
-    document.getElementById("txtComputerName").value = unescape(computerName);
-</script>
-</script>
+<div style="position: absolute;z-index: 1000;margin-left: 50%">
+<ul class = wand>
+    <li class="on">Lumos</li>
+    <li class="off">Nox</li>
+</ul>
+    </div>
+    <div id="potter-animation"></div>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/bodymovin/4.7.1/bodymovin.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
+<script src="static/js/wand3.js"></script>
 </body>
+
 </html>
