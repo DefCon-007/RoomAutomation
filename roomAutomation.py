@@ -18,8 +18,8 @@ def index():
 	return render_template('index.html',flag=0)
     # return "<h1>This flask app is running!</h1>"
 
-@app.route('/lumos')
-def tubelight():
+@app.route('/nox')
+def powerdown():
 	try : 
 		GPIO.output(11,1)
 	except RuntimeError : 
@@ -28,8 +28,8 @@ def tubelight():
 
 	return render_template("index.html",flag=1)
 
-@app.route('/nox')
-def lamp():
+@app.route('/lumos')
+def powerup():
 	try : 
 		GPIO.output(11,0)
 	except RuntimeError :
