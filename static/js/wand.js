@@ -18,5 +18,33 @@ $(".on").click(function() {
     var url = base_url + "/lumos"
     console.log(url)
    var xhr = new XMLHttpRequest();
-xhr.open('GET', url, false);
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+
+$(".off").click(function() {
+    var url = base_url + "/nox"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+
+$(".blon").click(function() {
+    var url = base_url + "/bluemos"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+
+$(".bloff").click(function() {
+    var url = base_url + "/blueox"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
 });
