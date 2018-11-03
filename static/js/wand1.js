@@ -48,3 +48,21 @@ $(".bloff").click(function() {
 xhr.open('GET', url, true);
 xhr.send();
 });
+
+
+$(".rndon").click(function() {
+    var url = base_url + "/randomcoloron"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+
+$(".rndoff").click(function() {
+    var url = base_url + "/randomcoloroff"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
