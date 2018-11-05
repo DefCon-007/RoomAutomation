@@ -1,7 +1,7 @@
 #!/bin/sh
-cd /home/pi/roomAutomation/
+cd /home/pi/RoomAutomation/
 ./start-ngrok.sh
 nohup python roomAutomation.py &
 sleep 10 
-cd /home/pi/roomAutomation/
-python /home/pi/roomAutomation/addressUpdater.py
+cd /home/pi/RoomAutomation/
+python /home/pi/RoomAutomation/addressUpdater.py
