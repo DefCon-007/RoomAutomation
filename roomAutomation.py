@@ -1,4 +1,4 @@
-from flask import Flask,render_template
+from flask import Flask,render_template,request
 # Import the WS2801 module.
 import Adafruit_WS2801
 import Adafruit_GPIO.SPI as SPI
@@ -6,17 +6,33 @@ import RPi.GPIO as GPIO
 from threading import Thread
 import time 
 import sys
-
-b=32
-r=33
-g=12
-PIXEL_COUNT = 49
-SPI_PORT   = 0
-SPI_DEVICE = 0
-pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
+import rgbStrip
+import json
 randomFlag = True
 
+rbgObject = rgbStrip.rgb(GPIO)
 
+
+rgbSmall = {
+	"r" : 0,
+	"g" : 0,
+	"b" : 0
+}
+
+rgbLarge = {
+	"r" : 0,
+	"g" : 0,
+	"b" : 0
+}
+monitorTop = [0,0,125]
+monitorBottom = [0,0,125]
+monitorLeft = [0,0,125]
+monitorRight = [0,0,125]
+
+timeOn = 0.05
+timeOff = 0.08
+
+pixels = rbgObject.pixels
 
 
 def initialiseGPIO() :
@@ -24,7 +40,7 @@ def initialiseGPIO() :
 	GPIO.setwarnings(False)
 
 	GPIO.setup(11, GPIO.OUT) #For automating Solid State relay
-	GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
+	# GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
 
 	pixels.clear()
 	pixels.show()  # Make sure to call show() after changing any pixels!
@@ -98,38 +114,61 @@ def turnBlueOff() :
 
 
 
+# def flashrandomlightsmonitor() : 
+# 	while randomFlag : 
+# 		blink_color(pixels, blink_times = 1, color=(255, 0, 0))
+# 		blink_color(pixels, blink_times = 1, color=(0, 255, 0))
+# 		blink_color(pixels, blink_times = 1, color=(0, 0, 255))
+# 	pixels.clear()
+# 	pixels.show()
+
+# def flashrandomlightsrgb() :
+# 	GPIO.output(b,1)
+# 	GPIO.output(r,1)
+# 	GPIO.output(g,1)
+# 	while randomFlag : 
+# 		GPIO.output(r,0)
+# 		time.sleep(0.08)
+# 		GPIO.output(r,1)
+# 		GPIO.output(b,0)
+# 		time.sleep(0.08)
+# 		GPIO.output(b,1)
+# 		GPIO.output(g,0)
+# 		time.sleep(0.08)
+# 		GPIO.output(g,1)
+def setAllMonitor() : 
+	rbgObject.setMonitorTop(*monitorTop)
+	rbgObject.setMonitorBottom(*monitorBottom)
+	rbgObject.setMonitorLeft(*monitorLeft)
+	rbgObject.setMonitorRight(*monitorRight)
+
+
 def flashrandomlightsmonitor() : 
 	while randomFlag : 
-		blink_color(pixels, blink_times = 1, color=(255, 0, 0))
-		blink_color(pixels, blink_times = 1, color=(0, 255, 0))
-		blink_color(pixels, blink_times = 1, color=(0, 0, 255))
-	pixels.clear()
-	pixels.show()
+		setAllMonitor()
+		rbgObject.setRGBSmall(rgbSmall["r"],rgbSmall["g"],rgbSmall["b"])
+		rbgObject.setRGBLarge(rgbLarge["r"],rgbLarge["g"],rgbLarge["b"])
+		time.sleep(timeOn)
+		rbgObject.clearAllMonitor()
+		rbgObject.setRGBSmall(0,0,0)
+		rbgObject.setRGBLarge(0,0,0)
+		time.sleep(timeOff)
+		# blink_color(pixels, blink_times = 1, color=(255, 0, 0))
+		# blink_color(pixels, blink_times = 1, color=(0, 255, 0))
+		# blink_color(pixels, blink_times = 1, color=(0, 0, 255))
+	# pixels.clear()
+	# pixels.show()
 
-def flashrandomlightsrgb() :
-	GPIO.output(b,1)
-	GPIO.output(r,1)
-	GPIO.output(g,1)
-	while randomFlag : 
-		GPIO.output(r,0)
-		time.sleep(0.08)
-		GPIO.output(r,1)
-		GPIO.output(b,0)
-		time.sleep(0.08)
-		GPIO.output(b,1)
-		GPIO.output(g,0)
-		time.sleep(0.08)
-		GPIO.output(g,1)
 
 @app.route('/randomcoloron')
 def randomcolor() : 
 	global randomFlag
 	randomFlag = True
 	t1 = Thread(target=flashrandomlightsmonitor)
-	t2 = Thread(target=flashrandomlightsrgb)
+
 
 	t1.start()
-	t2.start()
+
 	return render_template("index.html",flag=1)
 @app.route('/randomcoloroff') 
 def randcoloroff() :
@@ -137,6 +176,42 @@ def randcoloroff() :
 	randomFlag = False
 	return render_template("index.html",flag=1)
 	return render_template("index.html",flag=1)
+
+@app.route('/setColors', methods=["POST"])
+def setAllColors() : 
+	global monitorRight,monitorTop,monitorLeft,monitorBottom, timeOn, timeOff
+	# data = request.data.split("&")
+	data = json.loads(request.data)
+	rgbS = data["rgbSmall"].split(",")
+	
+	rgbSmall["r"] = int(float(rgbS[0]))
+	rgbSmall["g"] = int(float(rgbS[1]))
+	rgbSmall["b"] = int(float(rgbS[2]))
+
+	rgbL = data["rgbLarge"].split(",")
+	rgbLarge["r"] = int(float(rgbL[0]))
+	rgbLarge["g"] = int(float(rgbL[1]))
+	rgbLarge["b"] = int(float(rgbL[2]))
+
+	m = data["rgbmonitorTop"].split(",")
+	# rbgObject.setMonitorTop
+	monitorTop =  [int(float(m[0])), int(float(m[1])), int(float(m[2]))]
+	m = data["rgbmonitorBottom"].split(",")
+	monitorBottom = [int(float(m[0])), int(float(m[1])), int(float(m[2]))]
+
+	m = data["rgbmonitorLeft"].split(",")
+	monitorLeft = [int(float(m[0])), int(float(m[1])), int(float(m[2]))]
+	
+	m = data["rgbmonitorRight"].split(",")
+	monitorRight = [int(float(m[0])), int(float(m[1])), int(float(m[2]))]
+
+	timeOn = float(data["timeOn"])
+	timeOff = float(data["timeOff"])
+	setAllMonitor()
+	print(m)
+	return "ok"
+
+
 if __name__ == '__main__':
 
-	app.run(port=1234)
+	app.run(port=1234,debug=True)

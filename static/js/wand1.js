@@ -66,3 +66,23 @@ $(".rndoff").click(function() {
 xhr.open('GET', url, true);
 xhr.send();
 });
+
+
+function sendMonitorData(pos) {
+    var url = base_url + "/setMonitor"
+    console.log(url)
+    const params = "pos="+pos 
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url + "?"+, true);
+xhr.send();
+}
+
+$("#monitorTop").click(function() {
+
+    var color = $("#picker").spectrum("get");
+    console.log(color)
+    sendMonitorData("top")
+});
+
+
+

@@ -5,6 +5,11 @@
     <title>Privet Drive</title>
     <link rel='stylesheet prefetch' href='https://fonts.googleapis.com/css?family=Athiti:300,400'>
     <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css'>
+<script
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/bodymovin/4.7.1/bodymovin.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css" /><!-- Color Picker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>
     <style type="text/css">
 @font-face {
     font-family: 'hp'; /*a name to be used later*/
@@ -46,11 +51,59 @@ font-size: 1000%;
   font-weight: bold;
   padding-right: 15px;
     }
+
+    .box{
+        font-family: 'hp';
+    }
+
     </style>
 </head>
 
 <body>
-<div style="position: absolute;z-index: 1000;margin-left: 50%">
+<div style="position: absolute;z-index: 1000;">
+
+
+  <table>
+    <tbody>
+      <tr>
+        <td></td>
+        <td></td>
+        <td>  <input type='text' class="pick" id="monitorTop" /> </td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td> <input type='text' class="pick" id="rgbLarge" /> </td>
+        <td>  <input type='text' class="pick" id="monitorLeft" /> </td>
+        <td></td>
+        <td>  <input type='text' class="pick" id="monitorRight" /></td>
+      </tr>
+
+      <tr>
+        <td>  <input type='text' class="pick" id="rgbSmall" /> </td>
+        <td></td>
+        <td>  <input type='text' class="pick" id="monitorBottom" /></td>
+        <td></td>
+      </tr>
+
+
+      <tr style="color: white;">
+        <td>Ligth Time</td>
+        <td > <input style="width: 40px" type='number'  id="timeOn" value ="0.05" /></td>
+        <td> Off Time </td>
+        <td> <input style="width: 40px" type='number' id="timeOff" value= "0.08" /> </td>
+      </tr>
+
+
+    </tbody>
+
+  </table>
+<button onclick="sendColors()">Submit</button>
+  <!-- <div class="box" id =  "monitorTop">
+      <input type='text' class="pick" id="monitorTop" />
+  </div> -->
+
+
 <ul class = wand>
     <li class="on">Lumos</li>
     <li class="off">Nox</li>
@@ -66,9 +119,141 @@ font-size: 1000%;
 </ul>
     </div>
     <div id="potter-animation"></div>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/bodymovin/4.7.1/bodymovin.min.js'></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
-<script src="static/js/wand1.js"></script>
+    
+<!-- <script src="static/js/wand1.js"></script> -->
+<script>
+   function sendColors(color){
+    console.log("adf");
+    var color = $("#rgbLarge").spectrum('get');
+    var  data= {};
+    data["rgbLarge"] = color["_r"]+","+color["_g"]+","+color["_b"];
+
+    var color = $("#rgbSmall").spectrum('get');
+     data["rgbSmall"] =color["_r"]+","+color["_g"]+","+color["_b"];
+
+    var color = $("#monitorTop").spectrum('get');
+     data["rgbmonitorTop"] = color["_r"] +","+color["_g"]+","+color["_b"];
+
+    var color = $("#monitorBottom").spectrum('get');
+     data["rgbmonitorBottom"] = color["_r"]+","+color["_g"]+","+color["_b"];
+
+    var color = $("#monitorLeft").spectrum('get');
+     data["rgbmonitorLeft"] = color["_r"]+","+color["_g"]+","+color["_b"];
+
+    var color = $("#monitorRight").spectrum('get');
+     data["rgbmonitorRight"] = color["_r"]+","+color["_g"]+","+color["_b"];
+     data["timeOn"] =  $("#timeOn").val();
+      data["timeOff"] =  $("#timeOff").val();
+var base_url = window.location.origin;
+var url = base_url + "/setColors"
+
+   console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('POST', url, true);
+xhr.setRequestHeader('Content-type', 'application/json;charset=UTF-8');
+xhr.send(JSON.stringify(data));
+    // data += "rgbSmallR="+color["_r"]+"&rgbSmallG="+color["_g"]+"&rgbSmallB="+color["_b"]
+
+    console.log(data)
+  }
+
+
+
+  $(".pick").spectrum({
+    preferredFormat: "rgb",
+    color: "blue",
+    showInput: true,
+    showPalette: true,
+    palette: [["red", "rgb(0,255,0)", "blue"]],
+    change : sendColors
+});
+  0
+      
+  // $("#rgbLarge").on('change.spectrum', sendColors());
+  var base_url = window.location.origin;
+
+
+// $(#monitorTop).move(function(color) {
+//     console.log(color.toHexString()); // #ff0000
+//     console.log(123)
+// }
+   
+// );
+var spellAnimation = bodymovin.loadAnimation({
+    container: document.getElementById("potter-animation"),
+    renderer: "svg",
+    loop: false,
+    autoplay: false,
+    path: "https://raw.githubusercontent.com/abrahamrkj/facebook-spell/master/data.json"
+});
+console.log("Initialesed")
+var base_url = window.location.origin;
+
+$(".wand").click(function() {
+    spellAnimation.stop();
+    spellAnimation.play();
+});
+
+
+$(".on").click(function() {
+    var url = base_url + "/lumos"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+
+$(".off").click(function() {
+    var url = base_url + "/nox"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+
+$(".blon").click(function() {
+    var url = base_url + "/bluemos"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+
+$(".bloff").click(function() {
+    var url = base_url + "/blueox"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+
+$(".rndon").click(function() {
+    var url = base_url + "/randomcoloron"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+
+$(".rndoff").click(function() {
+    var url = base_url + "/randomcoloroff"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+
+
+</script>
+
+
+
 </body>
 
 </html>
