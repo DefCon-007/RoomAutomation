@@ -16,13 +16,13 @@ rbgObject = rgbStrip.rgb(GPIO)
 rgbSmall = {
 	"r" : 0,
 	"g" : 0,
-	"b" : 0
+	"b" : 1
 }
 
 rgbLarge = {
 	"r" : 0,
 	"g" : 0,
-	"b" : 0
+	"b" : 1
 }
 monitorTop = [0,0,125]
 monitorBottom = [0,0,125]
@@ -91,25 +91,25 @@ def powerup():
 def lightAllBlue() : 
 	global randomFlag
 	randomFlag = False
-	GPIO.output(b,0)
+	rbgObject.setRGBSmall(rgbSmall["r"],rgbSmall["g"],rgbSmall["b"])
+	rbgObject.setRGBLarge(rgbLarge["r"],rgbLarge["g"],rgbLarge["b"])
+	setAllMonitor()
 
-	for i in range(pixels.count()): 
-		pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color( 0,int(50),0 ))
-	pixels.show()
+
+	# GPIO.output(b,0)
+
+	# for i in range(pixels.count()): 
+	# 	pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color( 0,int(50),0 ))
+	# pixels.show()
 	return render_template("index.html",flag=1)
 	
 @app.route('/blueox')
 def turnBlueOff() : 
 	global randomFlag
 	randomFlag = False
-	pixels.clear()
-	pixels.show()
-	GPIO.output(b,1)
-	GPIO.output(r,1)
-	GPIO.output(g,1)
-
-	pixels.clear()
-	pixels.show()
+	rbgObject.clearAllMonitor()
+	rbgObject.setRGBSmall(0,0,0)
+	rbgObject.setRGBLarge(0,0,0)
 	return render_template("index.html",flag=1)
 
 
