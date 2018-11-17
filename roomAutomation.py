@@ -211,7 +211,10 @@ def setAllColors() :
 	print(m)
 	return "ok"
 
+def removeExtra() : 
+	rbgObject.setMonitorExtra(0,0,0)
 
 if __name__ == '__main__':
-
+	t2 = Thread(target=removeExtra)
+	t2.start()
 	app.run(port=1234,debug=True)

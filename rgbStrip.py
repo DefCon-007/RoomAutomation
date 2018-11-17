@@ -84,7 +84,6 @@ class rgb :
 		self.pixels.show()
 
 	def setMonitorExtra(self,r,g,b) : 
-
 		for k in STRIP_EXTRA : 
 			self.pixels.set_pixel(k, Adafruit_WS2801.RGB_to_color( r,b,g ))
 		self.pixels.show()
