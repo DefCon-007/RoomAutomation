@@ -94,7 +94,8 @@ def lightAllBlue() :
 	rbgObject.setRGBSmall(rgbSmall["r"],rgbSmall["g"],rgbSmall["b"])
 	rbgObject.setRGBLarge(rgbLarge["r"],rgbLarge["g"],rgbLarge["b"])
 	setAllMonitor()
-
+	t2 = Thread(target=removeExtra)
+	t2.start()
 
 	# GPIO.output(b,0)
 
@@ -165,7 +166,8 @@ def randomcolor() :
 	global randomFlag
 	randomFlag = True
 	t1 = Thread(target=flashrandomlightsmonitor)
-
+	t2 = Thread(target=removeExtra)
+	t2.start()
 
 	t1.start()
 
@@ -212,9 +214,9 @@ def setAllColors() :
 	return "ok"
 
 def removeExtra() : 
+	print("In it")
 	rbgObject.setMonitorExtra(0,0,0)
 
 if __name__ == '__main__':
-	t2 = Thread(target=removeExtra)
-	t2.start()
+
 	app.run(port=1234,debug=True)
