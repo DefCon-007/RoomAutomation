@@ -14,25 +14,18 @@ while True:
 	try : 
 		response = sessionObj.get("http://127.0.0.1:4040/api/tunnels")
 		jsonData = response.json()
-		print (jsonData)
 		publicUrl = jsonData["tunnels"][0]["public_url"]
 		break
 	except IndexError : 
 		pass
-# print (publicUrl)
+
 if response.status_code == 200 : 
-	htmlContent="""---
-title: Room
-layout: page
----
+	firstIndex = publicUrl.find("://")+3
+	secondIndex = publicUrl.find(".")
+	url = "https://api.keyvalue.xyz/71826813/roomurl/" + publicUrl[firstIndex: secondIndex]
 
-	<script type="text/javascript">
-	        window.location.replace("{}");
+	headers = {
+	    'cache-control': "no-cache"
+	    }
 
-
-	</script>
-
-	"""
-	with open("/home/pi/defcon-007.github.io/room.html","w") as f :
-		f.write(htmlContent.format(publicUrl))
-	call(["bash","commit.sh"])
+	response = requests.request("POST", url, headers=headers)
