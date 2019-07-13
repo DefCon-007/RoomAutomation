@@ -41,7 +41,7 @@ def initialiseGPIO() :
 
 	GPIO.setup(11, GPIO.OUT) #For automating Solid State relay
 	# GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
-
+        GPIO.setup(3, GPIO.OUT)
 	pixels.clear()
 	pixels.show()  # Make sure to call show() after changing any pixels!
 
