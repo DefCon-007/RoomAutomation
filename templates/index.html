@@ -110,6 +110,11 @@ font-size: 1000%;
 </ul>
 
 <ul class = wand>
+    <li class="fanon">Ventus</li>
+    <li class="fanoff">Ventnox</li>
+</ul>
+
+<ul class = wand>
     <li class="blon">Bluemos</li>
     <li class="bloff">Blueox</li>
 </ul>
@@ -206,6 +211,23 @@ xhr.send();
 
 $(".off").click(function() {
     var url = base_url + "/nox"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+$(".fanon").click(function() {
+    var url = base_url + "/ventus"
+    console.log(url)
+   var xhr = new XMLHttpRequest();
+xhr.open('GET', url, true);
+xhr.send();
+});
+
+
+$(".fanoff").click(function() {
+    var url = base_url + "/ventnox"
     console.log(url)
    var xhr = new XMLHttpRequest();
 xhr.open('GET', url, true);

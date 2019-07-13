@@ -40,8 +40,8 @@ def initialiseGPIO() :
 	GPIO.setwarnings(False)
 
 	GPIO.setup(11, GPIO.OUT) #For automating Solid State relay
+	GPIO.setup(3, GPIO.OUT)
 	# GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
-        GPIO.setup(3, GPIO.OUT)
 	pixels.clear()
 	pixels.show()  # Make sure to call show() after changing any pixels!
 
@@ -85,6 +85,26 @@ def powerup():
 	except RuntimeError :
 		initialiseGPIO()
 		GPIO.output(11,0)
+	return render_template("index.html",flag=1)
+
+
+@app.route('/ventnox')
+def powerdown():
+	try : 
+		GPIO.output(3,1)
+	except RuntimeError : 
+		initialiseGPIO()
+		GPIO.output(3,1)
+
+	return render_template("index.html",flag=1)
+
+@app.route('/ventus')
+def powerup():
+	try : 
+		GPIO.output(3,0)
+	except RuntimeError :
+		initialiseGPIO()
+		GPIO.output(3,0)
 	return render_template("index.html",flag=1)
 
 @app.route('/bluemos')
