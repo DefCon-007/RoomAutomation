@@ -1,0 +1,27 @@
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Traceback (most recent call last):
+  File "roomAutomation.py", line 91, in <module>
+    @app.route('/ventnox')
+  File "/usr/lib/python2.7/dist-packages/flask/app.py", line 1250, in decorator
+    self.add_url_rule(rule, endpoint, f, **options)
+  File "/usr/lib/python2.7/dist-packages/flask/app.py", line 66, in wrapper_func
+    return f(self, *args, **kwargs)
+  File "/usr/lib/python2.7/dist-packages/flask/app.py", line 1221, in add_url_rule
+    'existing endpoint function: %s' % endpoint)
+AssertionError: View function mapping is overwriting an existing endpoint function: powerdown
+[32mForwarding HTTP traffic from https://autobot.serveo.net
+[0mHTTP request from 49.37.192.235 to http://autobot.serveo.net/
+connect_to localhost port 1234: failed.
+HTTP request from 49.37.192.235 to http://autobot.serveo.net/
+connect_to localhost port 1234: failed.
+HTTP request from 49.37.192.235 to http://autobot.serveo.net/
+connect_to localhost port 1234: failed.
+HTTP request from 49.37.192.235 to http://autobot.serveo.net/
+connect_to localhost port 1234: failed.
+HTTP request from 49.37.192.235 to http://autobot.serveo.net/
+HTTP request from 49.37.192.235 to http://autobot.serveo.net/ventnox
+HTTP request from 49.37.192.235 to http://autobot.serveo.net/ventus
+HTTP request from 49.37.192.235 to http://autobot.serveo.net/lumos
+HTTP request from 49.37.192.235 to http://autobot.serveo.net/nox
+HTTP request from 49.37.192.235 to http://autobot.serveo.net/ventnox
+HTTP request from 49.37.192.235 to http://autobot.serveo.net/ventus

@@ -89,7 +89,7 @@ def powerup():
 
 
 @app.route('/ventnox')
-def powerdown():
+def fandown():
 	try : 
 		GPIO.output(3,1)
 	except RuntimeError : 
@@ -99,7 +99,7 @@ def powerdown():
 	return render_template("index.html",flag=1)
 
 @app.route('/ventus')
-def powerup():
+def fanup():
 	try : 
 		GPIO.output(3,0)
 	except RuntimeError :
