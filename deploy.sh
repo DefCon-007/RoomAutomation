@@ -1,7 +1,7 @@
 #!/bin/sh
 cd /home/pi/RoomAutomation/
-./start-serveo.sh
 nohup python roomAutomation.py &
-sleep 10 
+sleep 3
+./start-tunnel.sh
 #cd /home/pi/RoomAutomation/
 #python /home/pi/RoomAutomation/addressUpdater.py

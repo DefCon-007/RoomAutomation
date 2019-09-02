@@ -8,6 +8,7 @@ import time
 import sys
 import rgbStrip
 import json
+import subprocess
 randomFlag = True
 
 rbgObject = rgbStrip.rgb(GPIO)
@@ -41,7 +42,9 @@ def initialiseGPIO() :
 
 	GPIO.setup(11, GPIO.OUT) #For automating Solid State relay
 	GPIO.setup(3, GPIO.OUT)
-	# GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
+	GPIO.output(11,1)
+        GPIO.output(3,1)
+        # GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
 	pixels.clear()
 	pixels.show()  # Make sure to call show() after changing any pixels!
 
@@ -238,5 +241,5 @@ def removeExtra() :
 	rbgObject.setMonitorExtra(0,0,0)
 
 if __name__ == '__main__':
-
-	app.run(port=1234,debug=True)
+    app.run(host='0.0.0.0', port=1234, debug=True)
+    #subprocess.call(['./start-serveo.sh'])
