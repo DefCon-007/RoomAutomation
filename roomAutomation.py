@@ -3,13 +3,40 @@ from flask import Flask,render_template,request
 import Adafruit_WS2801
 import Adafruit_GPIO.SPI as SPI
 import RPi.GPIO as GPIO
+import os
+import logging
+from logdna import LogDNAHandler
 from threading import Thread
 import time 
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 import sys
 import rgbStrip
 import json
 import subprocess
 randomFlag = True
+
+log = logging.getLogger('logdna')
+log.setLevel(logging.INFO)
+
+options = {
+  'hostname': 'roomAutomation',
+}
+
+# Defaults to False; when True meta objects are searchable
+options['index_meta'] = True
+
+test = LogDNAHandler(os.environ.get("LOGDNA_KEY"), options)
+
+log.addHandler(test)
+
+
+sentry_sdk.init(
+    dsn=os.environ.get('SENTRY_DSN'),
+    integrations=[FlaskIntegration()]
+)
+
+
 
 rbgObject = rgbStrip.rgb(GPIO)
 
