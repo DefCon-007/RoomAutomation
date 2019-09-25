@@ -55,7 +55,7 @@ def initialise_GPIO_pins_for_relay():
 def initialiseGPIO() :
 	GPIO.setmode(GPIO.BOARD)
 	GPIO.setwarnings(False)
-	initialise_GPIO_pins_for_relay
+	initialise_GPIO_pins_for_relay()
     # GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
 	pixels.clear()
 	pixels.show()  # Make sure to call show() after changing any pixels!
