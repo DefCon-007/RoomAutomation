@@ -35,16 +35,28 @@ timeOff = 0.08
 
 pixels = rbgObject.pixels
 
+PIN_FAN = 5
+PIN_YELLOW_LIGHT = 3
+PIN_WHITE_LIGHT = 11
+PIN_BALCONY = 7
+
+GPIO_LOW = 1
+GPIO_HIGH = 0
+
+RELAY_PINS = [PIN_FAN, PIN_YELLOW_LIGHT, PIN_WHITE_LIGHT, PIN_BALCONY]
+
+
+
+def initialise_GPIO_pins_for_relay(): 
+	for pin in RELAY_PINS: 
+		GPIO.setup(pin, GPIO.OUT)
+		GPIO.output(pin, GPIO_LOW) # Start with all switches off
 
 def initialiseGPIO() :
 	GPIO.setmode(GPIO.BOARD)
 	GPIO.setwarnings(False)
-
-	GPIO.setup(11, GPIO.OUT) #For automating Solid State relay
-	GPIO.setup(3, GPIO.OUT)
-	GPIO.output(11,1)
-        GPIO.output(3,1)
-        # GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
+	initialise_GPIO_pins_for_relay
+    # GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
 	pixels.clear()
 	pixels.show()  # Make sure to call show() after changing any pixels!
 
@@ -65,6 +77,13 @@ def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
 			pixels.show()
 			time.sleep(0.08)
  
+def switch_relay(pin, state): 
+	try : 
+		GPIO.output(pin, state)
+	except RuntimeError : 
+		initialiseGPIO()
+		GPIO.output(pin, state)
+
 
 @app.route('/')
 def index():
@@ -73,68 +92,75 @@ def index():
 
 @app.route('/nox')
 def powerdown():
-	try : 
-		GPIO.output(11,1)
-	except RuntimeError : 
-		initialiseGPIO()
-		GPIO.output(11,1)
-
+	switch_relay(PIN_WHITE_LIGHT, GPIO_LOW)
 	return render_template("index.html",flag=1)
 
 @app.route('/lumos')
 def powerup():
-	try : 
-		GPIO.output(11,0)
-	except RuntimeError :
-		initialiseGPIO()
-		GPIO.output(11,0)
+	switch_relay(PIN_WHITE_LIGHT, GPIO_HIGH)
 	return render_template("index.html",flag=1)
 
 
 @app.route('/ventnox')
 def fandown():
-	try : 
-		GPIO.output(3,1)
-	except RuntimeError : 
-		initialiseGPIO()
-		GPIO.output(3,1)
-
+	switch_relay(PIN_FAN, GPIO_LOW)
 	return render_template("index.html",flag=1)
 
 @app.route('/ventus')
 def fanup():
-	try : 
-		GPIO.output(3,0)
-	except RuntimeError :
-		initialiseGPIO()
-		GPIO.output(3,0)
+	switch_relay(PIN_FAN, GPIO_HIGH)
 	return render_template("index.html",flag=1)
 
-@app.route('/bluemos')
-def lightAllBlue() : 
-	global randomFlag
-	randomFlag = False
-	rbgObject.setRGBSmall(rgbSmall["r"],rgbSmall["g"],rgbSmall["b"])
-	rbgObject.setRGBLarge(rgbLarge["r"],rgbLarge["g"],rgbLarge["b"])
-	setAllMonitor()
-	t2 = Thread(target=removeExtra)
-	t2.start()
 
-	# GPIO.output(b,0)
-
-	# for i in range(pixels.count()): 
-	# 	pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color( 0,int(50),0 ))
-	# pixels.show()
+@app.route('/yelnox')
+def yellowLightDown():
+	switch_relay(PIN_YELLOW_LIGHT, GPIO_LOW)
 	return render_template("index.html",flag=1)
+
+@app.route('/yelos')
+def yellowLightUp():
+	switch_relay(PIN_YELLOW_LIGHT, GPIO_HIGH)
+	return render_template("index.html",flag=1)
+
+
+@app.route('/balnox')
+def blaconyLightDown():
+	switch_relay(PIN_BALCONY, GPIO_LOW)
+	return render_template("index.html",flag=1)
+
+@app.route('/balos')
+def balconyLightUp():
+	switch_relay(PIN_BALCONY, GPIO_HIGH)
+	return render_template("index.html",flag=1)
+
+
+
+
+# @app.route('/bluemos')
+# def lightAllBlue() : 
+# 	global randomFlag
+# 	randomFlag = False
+# 	rbgObject.setRGBSmall(rgbSmall["r"],rgbSmall["g"],rgbSmall["b"])
+# 	rbgObject.setRGBLarge(rgbLarge["r"],rgbLarge["g"],rgbLarge["b"])
+# 	setAllMonitor()
+# 	t2 = Thread(target=removeExtra)
+# 	t2.start()
+
+# 	# GPIO.output(b,0)
+
+# 	# for i in range(pixels.count()): 
+# 	# 	pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color( 0,int(50),0 ))
+# 	# pixels.show()
+# 	return render_template("index.html",flag=1)
 	
-@app.route('/blueox')
-def turnBlueOff() : 
-	global randomFlag
-	randomFlag = False
-	rbgObject.clearAllMonitor()
-	rbgObject.setRGBSmall(0,0,0)
-	rbgObject.setRGBLarge(0,0,0)
-	return render_template("index.html",flag=1)
+# @app.route('/blueox')
+# def turnBlueOff() : 
+# 	global randomFlag
+# 	randomFlag = False
+# 	rbgObject.clearAllMonitor()
+# 	rbgObject.setRGBSmall(0,0,0)
+# 	rbgObject.setRGBLarge(0,0,0)
+# 	return render_template("index.html",flag=1)
 
 
 

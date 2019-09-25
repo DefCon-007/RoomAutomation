@@ -104,26 +104,31 @@ font-size: 1000%;
   </div> -->
 
 
-<ul class = wand>
-    <li class="on">Lumos</li>
-    <li class="off">Nox</li>
+<ul>
+    <li onclick="execute_click(this)" data-relative-url="lumos">Lumos</li>
+    <li onclick="execute_click(this)" data-relative-url="nox">Nox</li>
 </ul>
 
-<ul class = wand>
-    <li class="fanon">Ventus</li>
-    <li class="fanoff">Ventnox</li>
+<ul>
+  <li onclick="execute_click(this)" data-relative-url="ventus">Ventus</li>
+  <li onclick="execute_click(this)" data-relative-url="ventnox">Ventnox</li>
 </ul>
 
-<ul class = wand>
-    <li class="blon">Bluemos</li>
-    <li class="bloff">Blueox</li>
+<ul>
+  <li onclick="execute_click(this)" data-relative-url="yelos">Yelos</li>
+  <li onclick="execute_click(this)" data-relative-url="yelnox">Yelnox</li>
 </ul>
-<ul class = wand>
-    <li class="rndon">Randoms</li>
-    <li class="rndoff">Randnox</li>
+
+<ul>
+  <li onclick="execute_click(this)" data-relative-url="balos">Balos</li>
+  <li onclick="execute_click(this)" data-relative-url="balnox">Balnox</li>
 </ul>
+
+
     </div>
-    <div id="potter-animation"></div>
+
+
+<div id="potter-animation"></div>
     
 <!-- <script src="static/js/wand1.js"></script> -->
 <script>
@@ -191,85 +196,23 @@ var spellAnimation = bodymovin.loadAnimation({
     autoplay: false,
     path: "https://raw.githubusercontent.com/abrahamrkj/facebook-spell/master/data.json"
 });
-console.log("Initialesed")
+
 var base_url = window.location.origin;
 
-$(".wand").click(function() {
-    spellAnimation.stop();
-    spellAnimation.play();
-});
+function make_async_http_request(relative_url){
+  var url = base_url + "/" + relative_url
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.send();
+}
 
-
-$(".on").click(function() {
-    var url = base_url + "/lumos"
-    console.log(url)
-   var xhr = new XMLHttpRequest();
-xhr.open('GET', url, true);
-xhr.send();
-});
-
-
-$(".off").click(function() {
-    var url = base_url + "/nox"
-    console.log(url)
-   var xhr = new XMLHttpRequest();
-xhr.open('GET', url, true);
-xhr.send();
-});
-
-$(".fanon").click(function() {
-    var url = base_url + "/ventus"
-    console.log(url)
-   var xhr = new XMLHttpRequest();
-xhr.open('GET', url, true);
-xhr.send();
-});
-
-
-$(".fanoff").click(function() {
-    var url = base_url + "/ventnox"
-    console.log(url)
-   var xhr = new XMLHttpRequest();
-xhr.open('GET', url, true);
-xhr.send();
-});
-
-
-$(".blon").click(function() {
-    var url = base_url + "/bluemos"
-    console.log(url)
-   var xhr = new XMLHttpRequest();
-xhr.open('GET', url, true);
-xhr.send();
-});
-
-
-$(".bloff").click(function() {
-    var url = base_url + "/blueox"
-    console.log(url)
-   var xhr = new XMLHttpRequest();
-xhr.open('GET', url, true);
-xhr.send();
-});
-
-
-$(".rndon").click(function() {
-    var url = base_url + "/randomcoloron"
-    console.log(url)
-   var xhr = new XMLHttpRequest();
-xhr.open('GET', url, true);
-xhr.send();
-});
-
-
-$(".rndoff").click(function() {
-    var url = base_url + "/randomcoloroff"
-    console.log(url)
-   var xhr = new XMLHttpRequest();
-xhr.open('GET', url, true);
-xhr.send();
-});
-
+function execute_click(e){
+  // Play the animation
+  relative_url = $(e).attr('data-relative-url')
+  make_async_http_request(relative_url)
+  spellAnimation.stop();
+  spellAnimation.play();
+}
 
 
 </script>
