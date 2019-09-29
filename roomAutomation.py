@@ -6,7 +6,7 @@ import RPi.GPIO as GPIO
 import os
 import logging
 from logdna import LogDNAHandler
-from threading import Thread
+from threading import Thread, Timer, Lock
 import time 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
@@ -14,6 +14,9 @@ import sys
 import rgbStrip
 import json
 import subprocess
+from datetime import datetime as dt
+from datetime import timedelta as td 
+import atexit
 randomFlag = True
 
 log = logging.getLogger('logdna')
@@ -70,8 +73,58 @@ PIN_BALCONY = 7
 GPIO_LOW = 1
 GPIO_HIGH = 0
 
-RELAY_PINS = [PIN_FAN, PIN_YELLOW_LIGHT, PIN_WHITE_LIGHT, PIN_BALCONY]
+PIR_ON = 1
+PIR_OFF = 0
 
+RELAY_PINS = [PIN_FAN, PIN_YELLOW_LIGHT, PIN_WHITE_LIGHT, PIN_BALCONY]
+MOTION_INPUT_PIN = 8
+
+LAST_UPDATED_TIME = dt.now()
+TIME_THRESHOLD = 300
+
+motion_sensor_thread = Thread()
+motion_sensor_thread.start()
+dataLock = Lock()
+
+
+def create_app():
+    app = Flask(__name__)
+
+    def interrupt():
+        global motion_sensor_thread
+        motion_sensor_thread.cancel()
+
+    def doStuff():
+        global LAST_UPDATED_TIME
+        global motion_sensor_thread
+
+        with dataLock:
+			# current_state = GPIO.input(MOTION_INPUT_PIN)
+			# print("Tr ", current_state)
+			if (dt.now() - LAST_UPDATED_TIME).total_seconds() > TIME_THRESHOLD: 
+				current_state = GPIO.input(MOTION_INPUT_PIN)
+				motion_sensor_action(current_state)
+        # Do your stuff with commonDataStruct Here
+
+        # Set the next thread to happen
+        motion_sensor_thread = Timer(0.1, doStuff, ())
+        motion_sensor_thread.start()   
+
+    def doStuffStart():
+        # Do initialisation stuff here
+        global motion_sensor_thread
+        # Create your thread
+        yourThread = Timer(0.1, doStuff, ())
+        yourThread.start()
+
+    # Initiate
+    doStuffStart()
+    # When you kill Flask (SIGTERM), clear the trigger for the next thread
+    atexit.register(interrupt)
+    return app
+
+
+app = create_app()
 
 
 def initialise_GPIO_pins_for_relay(): 
@@ -83,11 +136,11 @@ def initialiseGPIO() :
 	GPIO.setmode(GPIO.BOARD)
 	GPIO.setwarnings(False)
 	initialise_GPIO_pins_for_relay()
+	GPIO.setup(MOTION_INPUT_PIN, GPIO.IN)
     # GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
 	pixels.clear()
 	pixels.show()  # Make sure to call show() after changing any pixels!
 
-app = Flask(__name__)
 initialiseGPIO()
 
 
@@ -104,7 +157,10 @@ def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
 			pixels.show()
 			time.sleep(0.08)
  
-def switch_relay(pin, state): 
+def switch_relay(pin, state, is_pir_triggered=False): 
+	global LAST_UPDATED_TIME
+	if not is_pir_triggered: 
+		LAST_UPDATED_TIME=dt.now()
 	try : 
 		GPIO.output(pin, state)
 	except RuntimeError : 
@@ -129,12 +185,12 @@ def powerup():
 
 
 @app.route('/ventnox')
-def fandown():
+def fan_down():
 	switch_relay(PIN_FAN, GPIO_LOW)
 	return render_template("index.html",flag=1)
 
 @app.route('/ventus')
-def fanup():
+def fan_on():
 	switch_relay(PIN_FAN, GPIO_HIGH)
 	return render_template("index.html",flag=1)
 
@@ -289,10 +345,41 @@ def setAllColors() :
 	print(m)
 	return "ok"
 
+
+def motion_sensor_action(state): 
+	"""
+	Fan - 6 AM to 7 PM 
+	White Light 7:01 PM to 12:00 AM 
+	Yellow light : 12:01 AM to 5:59 AM
+	"""
+	AM_6 = dt.now().time().replace(hour=6, minute=0)
+	PM_7 = dt.now().time().replace(hour=19, minute=0)
+	AM_12 = dt.now().time().replace(hour=0, minute=0)
+	current_time = dt.now().time()
+	if state == PIR_ON: 
+		if current_time >= AM_6 and current_time <= PM_7: 
+			switch_relay(PIN_FAN, GPIO_HIGH, True)
+		elif current_time > PM_7 and current_time <= AM_12 : 
+			switch_relay(PIN_WHITE_LIGHT, GPIO_HIGH, True)
+		elif current_time > AM_12 and current_time < AM_6: 
+			switch_relay(PIN_YELLOW_LIGHT, GPIO_HIGH, True)
+
+
+# def motion_sensor():
+#     # Take action only after threshold seconds 
+# 	global LAST_UPDATED_TIME
+# 	try: 
+# 		while True: 
+			
+# 	except KeyboardInterrupt: 
+# 		GPIO.cleanup()
+
 def removeExtra() : 
 	print("In it")
 	rbgObject.setMonitorExtra(0,0,0)
 
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
+
     #subprocess.call(['./start-serveo.sh'])
