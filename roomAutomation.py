@@ -17,8 +17,15 @@ import subprocess
 from datetime import datetime as dt
 from datetime import timedelta as td 
 import atexit
-randomFlag = True
 
+import os
+DIR_PATH = "/tmp/RoomAutomation"
+# Check if directory in /etc/ exists and create if it does not
+if not os.path.exists(DIR_PATH):
+	os.makedirs(DIR_PATH)
+
+randomFlag = True
+app = Flask(__name__)
 log = logging.getLogger('logdna')
 log.setLevel(logging.INFO)
 
@@ -35,8 +42,8 @@ log.addHandler(test)
 
 
 sentry_sdk.init(
-    dsn=os.environ.get('SENTRY_DSN'),
-    integrations=[FlaskIntegration()]
+	dsn=os.environ.get('SENTRY_DSN'),
+	integrations=[FlaskIntegration()]
 )
 
 
@@ -77,55 +84,103 @@ PIR_ON = 1
 PIR_OFF = 0
 
 RELAY_PINS = [PIN_FAN, PIN_YELLOW_LIGHT, PIN_WHITE_LIGHT, PIN_BALCONY]
-MOTION_INPUT_PIN = 8
+PIR_GATE_PIN = 8
+PIR_BED_PIN = 16 
 
-LAST_UPDATED_TIME = dt.now()
-TIME_THRESHOLD = 300
+LDR_PIN = 10
 
-motion_sensor_thread = Thread()
-motion_sensor_thread.start()
-dataLock = Lock()
-
-
-def create_app():
-    app = Flask(__name__)
-
-    def interrupt():
-        global motion_sensor_thread
-        motion_sensor_thread.cancel()
-
-    def doStuff():
-        global LAST_UPDATED_TIME
-        global motion_sensor_thread
-
-        with dataLock:
-			# current_state = GPIO.input(MOTION_INPUT_PIN)
-			# print("Tr ", current_state)
-			if (dt.now() - LAST_UPDATED_TIME).total_seconds() > TIME_THRESHOLD: 
-				current_state = GPIO.input(MOTION_INPUT_PIN)
-				motion_sensor_action(current_state)
-        # Do your stuff with commonDataStruct Here
-
-        # Set the next thread to happen
-        motion_sensor_thread = Timer(0.1, doStuff, ())
-        motion_sensor_thread.start()   
-
-    def doStuffStart():
-        # Do initialisation stuff here
-        global motion_sensor_thread
-        # Create your thread
-        yourThread = Timer(0.1, doStuff, ())
-        yourThread.start()
-
-    # Initiate
-    doStuffStart()
-    # When you kill Flask (SIGTERM), clear the trigger for the next thread
-    atexit.register(interrupt)
-    return app
+# motion_sensor_thread = Thread()
+# motion_sensor_thread.start()
+# dataLock = Lock()
 
 
-app = create_app()
+# def create_app():
+#     app = Flask(__name__)
 
+#     def interrupt():
+#         global motion_sensor_thread
+#         motion_sensor_thread.cancel()
+
+#     def doStuff():
+#         global LAST_UPDATED_TIME
+#         global motion_sensor_thread
+
+#         with dataLock:
+# 			# current_state = GPIO.input(PIR_GATE_PIN)
+# 			# print("Tr ", current_state)
+# 			if (dt.now() - LAST_UPDATED_TIME).total_seconds() > TIME_THRESHOLD: 
+# 				current_state = GPIO.input(PIR_GATE_PIN)
+# 				motion_sensor_action(current_state)
+#         # Do your stuff with commonDataStruct Here
+
+#         # Set the next thread to happen
+#         motion_sensor_thread = Timer(0.1, doStuff, ())
+#         motion_sensor_thread.start()   
+
+#     def doStuffStart():
+#         # Do initialisation stuff here
+#         global motion_sensor_thread
+#         # Create your thread
+#         yourThread = Timer(0.1, doStuff, ())
+#         yourThread.start()
+
+#     # Initiate
+#     doStuffStart()
+#     # When you kill Flask (SIGTERM), clear the trigger for the next thread
+#     atexit.register(interrupt)
+#     return app
+
+
+# app = create_app()
+PIR_BED_TIME = time.time() - 100
+PIR_GATE_TIME = time.time() - 40
+
+def gate_callback(channel): 
+	global PIR_GATE_TIME
+	if (time.time() - PIR_GATE_TIME) < 1: 
+		PIR_GATE_TIME = time.time()
+		return 0
+	handle_pir_sensors(channel)
+def bed_callback(channel): 
+	global PIR_BED_TIME
+	if (time.time() - PIR_BED_TIME) < 1: 
+		PIR_BED_TIME = time.time()
+		return 0
+	handle_pir_sensors(channel)
+
+def handle_pir_sensors(channel):
+	global PIR_BED_TIME, PIR_GATE_TIME
+	TIME_DIFF_UPPER_THRESHOLD = 5
+	TIME_DIFF_BOTTOM_THRESHOLD = 0.7
+
+	if channel == PIR_BED_PIN: 
+		PIR_BED_TIME = time.time()
+		seconds_diff = (PIR_BED_TIME - PIR_GATE_TIME)
+		if seconds_diff > TIME_DIFF_BOTTOM_THRESHOLD and seconds_diff < TIME_DIFF_UPPER_THRESHOLD: 
+			# Bed PIR activated after gate pir 
+			# Person entered, turn on some thing
+			switch_relay(PIN_FAN, GPIO_HIGH)
+			ldr_reading = get_ldr_reading()
+			print(ldr_reading)
+			if ldr_reading > 450: 
+				switch_relay(PIN_YELLOW_LIGHT, GPIO_HIGH)
+
+	elif channel == PIR_GATE_PIN: 
+		PIR_GATE_TIME = time.time()
+		seconds_diff = (PIR_GATE_TIME - PIR_BED_TIME)
+		if seconds_diff > TIME_DIFF_BOTTOM_THRESHOLD and seconds_diff < TIME_DIFF_UPPER_THRESHOLD: 
+			# Gate PIR activated after bed pir 
+			# Person left the room, turn off everything
+			switch_relay(PIN_FAN, GPIO_LOW)
+			switch_relay(PIN_WHITE_LIGHT, GPIO_LOW)
+			switch_relay(PIN_YELLOW_LIGHT, GPIO_LOW)
+	print("Channel {} diff {}".format(channel, seconds_diff))
+
+def enable_motion_sensors(): 
+	#PIR Sensors event detection
+	GPIO.add_event_detect(PIR_BED_PIN, GPIO.RISING, callback=bed_callback, bouncetime=500) 
+	time.sleep(0.2)
+	GPIO.add_event_detect(PIR_GATE_PIN, GPIO.RISING, callback=gate_callback, bouncetime=500) 
 
 def initialise_GPIO_pins_for_relay(): 
 	for pin in RELAY_PINS: 
@@ -136,13 +191,53 @@ def initialiseGPIO() :
 	GPIO.setmode(GPIO.BOARD)
 	GPIO.setwarnings(False)
 	initialise_GPIO_pins_for_relay()
-	GPIO.setup(MOTION_INPUT_PIN, GPIO.IN)
-    # GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
+	GPIO.setup(PIR_GATE_PIN, GPIO.IN,  pull_up_down = GPIO.PUD_DOWN)
+	GPIO.setup(PIR_BED_PIN, GPIO.IN,  pull_up_down = GPIO.PUD_DOWN)
+
+	#Initialise GPIO pin 
+	GPIO.setup(LDR_PIN, GPIO.OUT)
+	GPIO.output(LDR_PIN, GPIO.LOW)
+	# GPIO.setup([r,g,b], GPIO.OUT, initial=GPIO.HIGH)
+
+	enable_motion_sensors()
+
 	pixels.clear()
 	pixels.show()  # Make sure to call show() after changing any pixels!
 
 initialiseGPIO()
 
+def switch_relay(pin, state): 
+	try : 
+		GPIO.output(pin, state)
+	except RuntimeError : 
+		initialiseGPIO()
+		GPIO.output(pin, state)
+
+def read_ldr ():
+    count = 0
+  
+    #Output on the pin for 
+    GPIO.setup(LDR_PIN, GPIO.OUT)
+    GPIO.output(LDR_PIN, GPIO.LOW)
+    time.sleep(0.1)
+
+    #Change the pin back to input
+    GPIO.setup(LDR_PIN, GPIO.IN)
+  
+    #Count until the pin goes high
+    while (GPIO.input(LDR_PIN) == GPIO.LOW):
+        count += 1
+
+    return count
+
+def get_ldr_reading(time_for_readings = 2): 
+	start_time = time.time()
+	readings_array = []
+	while time.time() - start_time < time_for_readings: 
+		readings_array.append(read_ldr())
+	if len(readings_array) == 0: 
+		return 10000
+	return sum(readings_array)/len(readings_array)
 
 def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
 	for i in range(blink_times):
@@ -156,16 +251,6 @@ def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
 			pixels.clear()
 			pixels.show()
 			time.sleep(0.08)
- 
-def switch_relay(pin, state, is_pir_triggered=False): 
-	global LAST_UPDATED_TIME
-	if not is_pir_triggered: 
-		LAST_UPDATED_TIME=dt.now()
-	try : 
-		GPIO.output(pin, state)
-	except RuntimeError : 
-		initialiseGPIO()
-		GPIO.output(pin, state)
 
 
 @app.route('/')
@@ -216,7 +301,16 @@ def balconyLightUp():
 	switch_relay(PIN_BALCONY, GPIO_HIGH)
 	return render_template("index.html",flag=1)
 
+@app.route('/obliviate')
+def Obliviate(): 
+	GPIO.remove_event_detect(PIR_GATE_PIN)
+	GPIO.remove_event_detect(PIR_BED_PIN)
 
+@app.route('/remembrall')
+def remembrall(): 
+	GPIO.remove_event_detect(PIR_GATE_PIN)
+	GPIO.remove_event_detect(PIR_BED_PIN)
+	enable_motion_sensors()
 
 
 # @app.route('/bluemos')
@@ -269,6 +363,8 @@ def balconyLightUp():
 # 		GPIO.output(g,0)
 # 		time.sleep(0.08)
 # 		GPIO.output(g,1)
+
+
 def setAllMonitor() : 
 	rbgObject.setMonitorTop(*monitorTop)
 	rbgObject.setMonitorBottom(*monitorBottom)
@@ -345,6 +441,8 @@ def setAllColors() :
 	print(m)
 	return "ok"
 
+def removeExtra() : 
+	rbgObject.setMonitorExtra(0,0,0)
 
 def motion_sensor_action(state): 
 	"""
@@ -365,21 +463,7 @@ def motion_sensor_action(state):
 			switch_relay(PIN_YELLOW_LIGHT, GPIO_HIGH, True)
 
 
-# def motion_sensor():
-#     # Take action only after threshold seconds 
-# 	global LAST_UPDATED_TIME
-# 	try: 
-# 		while True: 
-			
-# 	except KeyboardInterrupt: 
-# 		GPIO.cleanup()
-
-def removeExtra() : 
-	print("In it")
-	rbgObject.setMonitorExtra(0,0,0)
-
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=1234, debug=True)
+	app.run(host='0.0.0.0', port=1234, debug=True)
 
-    #subprocess.call(['./start-serveo.sh'])
+	#subprocess.call(['./start-serveo.sh'])
