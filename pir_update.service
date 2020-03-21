@@ -1,0 +1,13 @@
+[Unit]
+Description=A script to update current time on motion detected
+After=roomautomation.service
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=pi
+ExecStart=/usr/bin/python /home/pi/RoomAutomation/pir_data_updater.py
+
+[Install]
+WantedBy=multi-user.target

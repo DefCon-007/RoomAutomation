@@ -60,9 +60,12 @@ font-size: 1000%;
 </head>
 
 <body>
+  
 <div style="position: absolute;z-index: 1000;overflow-y:scroll; height:100%;width:100%;">
 
-
+  <div id='ldr_value' onclick="update_ldr_value()" style="position: absolute; top: 0; right: 0; width: 100px; text-align:right;font-size:600%;padding-right:50px;color:#e3a000">
+    0
+  </div>
   <table>
     <tbody>
       <tr>
@@ -105,26 +108,26 @@ font-size: 1000%;
 
 
 <ul>
-    <li onclick="execute_click(this)" data-relative-url="lumos">Lumos</li>
-    <li onclick="execute_click(this)" data-relative-url="nox">Nox</li>
+    <li onclick="execute_click(this)" data-relative-url="lumos" >Lumos</li>
+    <li onclick="execute_click(this)" data-relative-url="nox" >Nox</li>
 </ul>
 
 <ul>
-  <li onclick="execute_click(this)" data-relative-url="ventus">Ventus</li>
+  <li onclick="execute_click(this)" data-relative-url="ventus" {{pin_data.PIN_FAN}}>Ventus</li>
   <li onclick="execute_click(this)" data-relative-url="ventnox">Ventnox</li>
 </ul>
 
 <ul>
-  <li onclick="execute_click(this)" data-relative-url="yelos">Yelos</li>
+  <li onclick="execute_click(this)" data-relative-url="yelos" {{pin_data.PIN_YELLOW_LIGHT}}>Yelos</li>
   <li onclick="execute_click(this)" data-relative-url="yelnox">Yelnox</li>
 </ul>
 
 <ul>
-  <li onclick="execute_click(this)" data-relative-url="balos">Balos</li>
+  <li onclick="execute_click(this)" data-relative-url="balos" {{pin_data.PIN_BALCONY}}>Balos</li>
   <li onclick="execute_click(this)" data-relative-url="balnox">Balnox</li>
 </ul>
 <ul>
-  <li onclick="execute_click(this)" data-relative-url="remembrall">Remembrall</li>
+  <li onclick="execute_click(this)" data-relative-url="remembrall" {{pin_data.MOTION_SENSOR}}>Remembrall</li>
   <li onclick="execute_click(this)" data-relative-url="obliviate">Obliviate</li>
 </ul>
 
@@ -206,6 +209,12 @@ var base_url = window.location.origin;
 function make_async_http_request(relative_url){
   var url = base_url + "/" + relative_url
   var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == XMLHttpRequest.DONE) {
+        var json_data = JSON.parse(xhr.responseText);
+        set_button_highlight(json_data);
+    }
+}
   xhr.open('GET', url, true);
   xhr.send();
 }
@@ -218,7 +227,35 @@ function execute_click(e){
   spellAnimation.play();
 }
 
+function set_button_highlight(json_data){
+        console.log(json_data);
+        for (var redirect_url in json_data){
+          var element = document.querySelectorAll(`[data-relative-url=${redirect_url}]`)[0];
+          if (json_data[redirect_url]){
+            element.setAttribute("style", "color: #ebcd6e;");
+          }else{
+            element.removeAttribute("style");
+          }
+        }
+}
 
+function update_ldr_value(){
+  var res_element = document.getElementById('ldr_value');
+
+  // Make HTTP request
+  var url = base_url + "/" + "ldr_val"
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == XMLHttpRequest.DONE) {
+        var json_data = JSON.parse(xhr.responseText);
+        res_element.innerHTML = json_data.ldr_value;
+    }
+}
+  xhr.open('GET', url, true);
+  xhr.send();
+}
+set_button_highlight(JSON.parse('{{pin_data|tojson }}'))
+update_ldr_value()
 </script>
 
 

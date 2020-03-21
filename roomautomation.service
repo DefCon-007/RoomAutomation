@@ -1,0 +1,13 @@
+[Unit]
+Description=Room automation flask server
+After=nginx.service
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=pi
+ExecStart=/usr/bin/python /home/pi/RoomAutomation/roomAutomation.py
+
+[Install]
+WantedBy=multi-user.target

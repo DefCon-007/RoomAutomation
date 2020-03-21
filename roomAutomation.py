@@ -1,4 +1,4 @@
-from flask import Flask,render_template,request
+from flask import Flask,render_template,request, jsonify
 # Import the WS2801 module.
 import Adafruit_WS2801
 import Adafruit_GPIO.SPI as SPI
@@ -17,46 +17,38 @@ import subprocess
 from datetime import datetime as dt
 from datetime import timedelta as td 
 import atexit
-
-import os
-DIR_PATH = "/tmp/RoomAutomation"
-# Check if directory in /etc/ exists and create if it does not
-if not os.path.exists(DIR_PATH):
-	os.makedirs(DIR_PATH)
+from ldr import LDR
+from redis_client import RedisCache
 
 randomFlag = True
 app = Flask(__name__)
+
+# Initialize logdna 
 log = logging.getLogger('logdna')
 log.setLevel(logging.INFO)
-
 options = {
   'hostname': 'roomAutomation',
 }
-
 # Defaults to False; when True meta objects are searchable
 options['index_meta'] = True
-
 test = LogDNAHandler(os.environ.get("LOGDNA_KEY"), options)
-
 log.addHandler(test)
 
 
+# Initialize sentry
 sentry_sdk.init(
 	dsn=os.environ.get('SENTRY_DSN'),
 	integrations=[FlaskIntegration()]
 )
 
-
+redis_connection = RedisCache()
 
 rbgObject = rgbStrip.rgb(GPIO)
-
-
 rgbSmall = {
 	"r" : 0,
 	"g" : 0,
 	"b" : 1
 }
-
 rgbLarge = {
 	"r" : 0,
 	"g" : 0,
@@ -66,6 +58,7 @@ monitorTop = [0,0,125]
 monitorBottom = [0,0,125]
 monitorLeft = [0,0,125]
 monitorRight = [0,0,125]
+
 
 timeOn = 0.05
 timeOff = 0.08
@@ -88,6 +81,23 @@ PIR_GATE_PIN = 8
 PIR_BED_PIN = 16 
 
 LDR_PIN = 10
+
+def convert_pin_val_to_color(value): 
+    if (value == GPIO_HIGH): 
+        return 'style=color:#ebcd6e'
+    else: 
+        return ''
+
+def get_current_state(): 
+    val_dict = {
+		'ventus': convert_pin_val_to_color(redis_connection.get(PIN_FAN)),
+		'yelos': convert_pin_val_to_color(redis_connection.get(PIN_YELLOW_LIGHT)),
+		'lumos': convert_pin_val_to_color(redis_connection.get(PIN_WHITE_LIGHT)),
+		'balos': convert_pin_val_to_color(redis_connection.get(PIN_BALCONY)),
+  		'remembrall': convert_pin_val_to_color(redis_connection.get("MOTION_SENSOR")),
+	}
+    print(val_dict)
+    return val_dict
 
 # motion_sensor_thread = Thread()
 # motion_sensor_thread.start()
@@ -132,60 +142,60 @@ LDR_PIN = 10
 
 
 # app = create_app()
-PIR_BED_TIME = time.time() - 100
-PIR_GATE_TIME = time.time() - 40
 
-def gate_callback(channel): 
-	global PIR_GATE_TIME
-	if (time.time() - PIR_GATE_TIME) < 1: 
-		PIR_GATE_TIME = time.time()
-		return 0
+
+PIR_BED_TIME = redis_connection.set('PIR_BED_TIME', time.time() - 100)
+PIR_GATE_TIME = redis_connection.set('PIR_GATE_TIME', time.time() - 40)
+
+def gate_callback(channel):
+	print("Gate called")
+ 	redis_connection.set('PIR_GATE_TIME', time.time())
 	handle_pir_sensors(channel)
-def bed_callback(channel): 
-	global PIR_BED_TIME
-	if (time.time() - PIR_BED_TIME) < 1: 
-		PIR_BED_TIME = time.time()
-		return 0
+ 
+def bed_callback(channel):
+    # print("bed called")print("bed called")
+	print("bed called")
+ 	redis_connection.set('PIR_BED_TIME', time.time())
 	handle_pir_sensors(channel)
 
 def handle_pir_sensors(channel):
-	global PIR_BED_TIME, PIR_GATE_TIME
+	PIR_BED_TIME = redis_connection.get_float('PIR_BED_TIME')
+ 	PIR_GATE_TIME = redis_connection.get_float('PIR_GATE_TIME')
+
+	time_diff = abs(PIR_BED_TIME - PIR_GATE_TIME)
+	print(time_diff)
 	TIME_DIFF_UPPER_THRESHOLD = 5
 	TIME_DIFF_BOTTOM_THRESHOLD = 0.7
 
-	if channel == PIR_BED_PIN: 
-		PIR_BED_TIME = time.time()
-		seconds_diff = (PIR_BED_TIME - PIR_GATE_TIME)
-		if seconds_diff > TIME_DIFF_BOTTOM_THRESHOLD and seconds_diff < TIME_DIFF_UPPER_THRESHOLD: 
+	if channel == PIR_BED_PIN:
+		if time_diff > TIME_DIFF_BOTTOM_THRESHOLD and time_diff < TIME_DIFF_UPPER_THRESHOLD: 
 			# Bed PIR activated after gate pir 
 			# Person entered, turn on some thing
 			switch_relay(PIN_FAN, GPIO_HIGH)
-			ldr_reading = get_ldr_reading()
-			print(ldr_reading)
+			ldr_reading = redis_connection.get('LDR_BED', 500)
 			if ldr_reading > 450: 
 				switch_relay(PIN_YELLOW_LIGHT, GPIO_HIGH)
 
-	elif channel == PIR_GATE_PIN: 
-		PIR_GATE_TIME = time.time()
-		seconds_diff = (PIR_GATE_TIME - PIR_BED_TIME)
-		if seconds_diff > TIME_DIFF_BOTTOM_THRESHOLD and seconds_diff < TIME_DIFF_UPPER_THRESHOLD: 
+	elif channel == PIR_GATE_PIN:
+		if time_diff > TIME_DIFF_BOTTOM_THRESHOLD and time_diff < TIME_DIFF_UPPER_THRESHOLD: 
 			# Gate PIR activated after bed pir 
 			# Person left the room, turn off everything
 			switch_relay(PIN_FAN, GPIO_LOW)
+   			switch_relay(PIN_BALCONY, GPIO_LOW)
 			switch_relay(PIN_WHITE_LIGHT, GPIO_LOW)
 			switch_relay(PIN_YELLOW_LIGHT, GPIO_LOW)
-	print("Channel {} diff {}".format(channel, seconds_diff))
 
 def enable_motion_sensors(): 
 	#PIR Sensors event detection
 	GPIO.add_event_detect(PIR_BED_PIN, GPIO.RISING, callback=bed_callback, bouncetime=500) 
 	time.sleep(0.2)
 	GPIO.add_event_detect(PIR_GATE_PIN, GPIO.RISING, callback=gate_callback, bouncetime=500) 
+	redis_connection.set("MOTION_SENSOR", GPIO_HIGH)
 
 def initialise_GPIO_pins_for_relay(): 
 	for pin in RELAY_PINS: 
 		GPIO.setup(pin, GPIO.OUT)
-		GPIO.output(pin, GPIO_LOW) # Start with all switches off
+		GPIO.output(pin, redis_connection.get(pin, GPIO_LOW))
 
 def initialiseGPIO() :
 	GPIO.setmode(GPIO.BOARD)
@@ -209,35 +219,10 @@ initialiseGPIO()
 def switch_relay(pin, state): 
 	try : 
 		GPIO.output(pin, state)
+		redis_connection.set(pin,state)
 	except RuntimeError : 
 		initialiseGPIO()
 		GPIO.output(pin, state)
-
-def read_ldr ():
-    count = 0
-  
-    #Output on the pin for 
-    GPIO.setup(LDR_PIN, GPIO.OUT)
-    GPIO.output(LDR_PIN, GPIO.LOW)
-    time.sleep(0.1)
-
-    #Change the pin back to input
-    GPIO.setup(LDR_PIN, GPIO.IN)
-  
-    #Count until the pin goes high
-    while (GPIO.input(LDR_PIN) == GPIO.LOW):
-        count += 1
-
-    return count
-
-def get_ldr_reading(time_for_readings = 2): 
-	start_time = time.time()
-	readings_array = []
-	while time.time() - start_time < time_for_readings: 
-		readings_array.append(read_ldr())
-	if len(readings_array) == 0: 
-		return 10000
-	return sum(readings_array)/len(readings_array)
 
 def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
 	for i in range(blink_times):
@@ -255,64 +240,70 @@ def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
 
 @app.route('/')
 def index():
-	return render_template('index.html',flag=0)
+	return render_template('index.html', pin_data=get_current_state())
 	# return "<h1>This flask app is running!</h1>"
 
 @app.route('/nox')
 def powerdown():
 	switch_relay(PIN_WHITE_LIGHT, GPIO_LOW)
-	return render_template("index.html",flag=1)
+ 	return jsonify(get_current_state()) 
 
 @app.route('/lumos')
 def powerup():
 	switch_relay(PIN_WHITE_LIGHT, GPIO_HIGH)
-	return render_template("index.html",flag=1)
+	return jsonify(get_current_state()) 
 
 
 @app.route('/ventnox')
 def fan_down():
 	switch_relay(PIN_FAN, GPIO_LOW)
-	return render_template("index.html",flag=1)
+	return jsonify(get_current_state()) 
 
 @app.route('/ventus')
 def fan_on():
 	switch_relay(PIN_FAN, GPIO_HIGH)
-	return render_template("index.html",flag=1)
-
+	return jsonify(get_current_state()) 
 
 @app.route('/yelnox')
 def yellowLightDown():
 	switch_relay(PIN_YELLOW_LIGHT, GPIO_LOW)
-	return render_template("index.html",flag=1)
+	return jsonify(get_current_state()) 
 
 @app.route('/yelos')
 def yellowLightUp():
 	switch_relay(PIN_YELLOW_LIGHT, GPIO_HIGH)
-	return render_template("index.html",flag=1)
+	return jsonify(get_current_state()) 
 
 
 @app.route('/balnox')
 def blaconyLightDown():
 	switch_relay(PIN_BALCONY, GPIO_LOW)
-	return render_template("index.html",flag=1)
+	return jsonify(get_current_state()) 
 
 @app.route('/balos')
 def balconyLightUp():
 	switch_relay(PIN_BALCONY, GPIO_HIGH)
-	return render_template("index.html",flag=1)
+	return jsonify(get_current_state()) 
 
 @app.route('/obliviate')
 def Obliviate(): 
 	GPIO.remove_event_detect(PIR_GATE_PIN)
 	GPIO.remove_event_detect(PIR_BED_PIN)
+ 	redis_connection.set("MOTION_SENSOR", GPIO_LOW)
+  	return jsonify(get_current_state()) 
 
 @app.route('/remembrall')
 def remembrall(): 
 	GPIO.remove_event_detect(PIR_GATE_PIN)
 	GPIO.remove_event_detect(PIR_BED_PIN)
 	enable_motion_sensors()
+ 	return jsonify(get_current_state()) 
 
-
+@app.route('/ldr_val')
+def get_ldr_value(): 
+    val = redis_connection.get('LDR_BED');
+    return jsonify({"ldr_value": val})
+    
 # @app.route('/bluemos')
 # def lightAllBlue() : 
 # 	global randomFlag
@@ -328,7 +319,7 @@ def remembrall():
 # 	# for i in range(pixels.count()): 
 # 	# 	pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color( 0,int(50),0 ))
 # 	# pixels.show()
-# 	return render_template("index.html",flag=1)
+# 	return render_template("index.html",pin_data=get_current_state())
 	
 # @app.route('/blueox')
 # def turnBlueOff() : 
@@ -337,7 +328,7 @@ def remembrall():
 # 	rbgObject.clearAllMonitor()
 # 	rbgObject.setRGBSmall(0,0,0)
 # 	rbgObject.setRGBLarge(0,0,0)
-# 	return render_template("index.html",flag=1)
+# 	return render_template("index.html",pin_data=get_current_state())
 
 
 
@@ -399,13 +390,13 @@ def randomcolor() :
 
 	t1.start()
 
-	return render_template("index.html",flag=1)
+	return render_template("index.html",pin_data=get_current_state())
 @app.route('/randomcoloroff') 
 def randcoloroff() :
 	global randomFlag 
 	randomFlag = False
-	return render_template("index.html",flag=1)
-	return render_template("index.html",flag=1)
+	return render_template("index.html",pin_data=get_current_state())
+	return render_template("index.html",pin_data=get_current_state())
 
 @app.route('/setColors', methods=["POST"])
 def setAllColors() : 

@@ -1,0 +1,13 @@
+[Unit]
+Description=A script to update value from LDR 
+After=roomautomation.service
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=pi
+ExecStart=/usr/bin/python /home/pi/RoomAutomation/ldr_update_script.py
+
+[Install]
+WantedBy=multi-user.target
