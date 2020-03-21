@@ -11,7 +11,7 @@ import time
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 import sys
-import rgbStrip
+# import rgbStrip
 import json
 import subprocess
 from datetime import datetime as dt
@@ -43,7 +43,7 @@ sentry_sdk.init(
 
 redis_connection = RedisCache()
 
-rbgObject = rgbStrip.rgb(GPIO)
+# rbgObject = rgbStrip.rgb(GPIO)
 rgbSmall = {
 	"r" : 0,
 	"g" : 0,
@@ -63,7 +63,7 @@ monitorRight = [0,0,125]
 timeOn = 0.05
 timeOff = 0.08
 
-pixels = rbgObject.pixels
+# pixels = rbgObject.pixels
 
 PIN_FAN = 5
 PIN_YELLOW_LIGHT = 3
@@ -211,8 +211,8 @@ def initialiseGPIO() :
 
 	enable_motion_sensors()
 
-	pixels.clear()
-	pixels.show()  # Make sure to call show() after changing any pixels!
+	# pixels.clear()
+	# pixels.show()  # Make sure to call show() after changing any pixels!
 
 initialiseGPIO()
 
@@ -356,28 +356,23 @@ def get_ldr_value():
 # 		GPIO.output(g,1)
 
 
-def setAllMonitor() : 
-	rbgObject.setMonitorTop(*monitorTop)
-	rbgObject.setMonitorBottom(*monitorBottom)
-	rbgObject.setMonitorLeft(*monitorLeft)
-	rbgObject.setMonitorRight(*monitorRight)
+# def setAllMonitor() : 
+# 	rbgObject.setMonitorTop(*monitorTop)
+# 	rbgObject.setMonitorBottom(*monitorBottom)
+# 	rbgObject.setMonitorLeft(*monitorLeft)
+# 	rbgObject.setMonitorRight(*monitorRight)
 
 
-def flashrandomlightsmonitor() : 
-	while randomFlag : 
-		setAllMonitor()
-		rbgObject.setRGBSmall(rgbSmall["r"],rgbSmall["g"],rgbSmall["b"])
-		rbgObject.setRGBLarge(rgbLarge["r"],rgbLarge["g"],rgbLarge["b"])
-		time.sleep(timeOn)
-		rbgObject.clearAllMonitor()
-		rbgObject.setRGBSmall(0,0,0)
-		rbgObject.setRGBLarge(0,0,0)
-		time.sleep(timeOff)
-		# blink_color(pixels, blink_times = 1, color=(255, 0, 0))
-		# blink_color(pixels, blink_times = 1, color=(0, 255, 0))
-		# blink_color(pixels, blink_times = 1, color=(0, 0, 255))
-	# pixels.clear()
-	# pixels.show()
+# def flashrandomlightsmonitor() : 
+# 	while randomFlag : 
+# 		setAllMonitor()
+# 		rbgObject.setRGBSmall(rgbSmall["r"],rgbSmall["g"],rgbSmall["b"])
+# 		rbgObject.setRGBLarge(rgbLarge["r"],rgbLarge["g"],rgbLarge["b"])
+# 		time.sleep(timeOn)
+# 		rbgObject.clearAllMonitor()
+# 		rbgObject.setRGBSmall(0,0,0)
+# 		rbgObject.setRGBLarge(0,0,0)
+# 		time.sleep(timeOff)
 
 
 @app.route('/randomcoloron')
@@ -455,6 +450,6 @@ def motion_sensor_action(state):
 
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=1234, debug=True)
+	app.run(host='0.0.0.0', port=12344, debug=True)
 
 	#subprocess.call(['./start-serveo.sh'])
