@@ -450,6 +450,6 @@ def motion_sensor_action(state):
 
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=12344, debug=True)
+	app.run(host='0.0.0.0', port=1234, debug=True)
 
 	#subprocess.call(['./start-serveo.sh'])
