@@ -55,6 +55,10 @@ font-size: 1000%;
     .box{
         font-family: 'hp';
     }
+    .form_input{
+      font-weight: bold;
+      padding-right:0px
+    }
 
     </style>
 </head>
@@ -66,6 +70,7 @@ font-size: 1000%;
   <div id='ldr_value' onclick="update_ldr_value()" style="position: absolute; top: 0; right: 0; width: 100px; text-align:right;font-size:600%;padding-right:50px;color:#e3a000">
     0
   </div>
+
   <table>
     <tbody>
       <tr>
@@ -115,6 +120,14 @@ font-size: 1000%;
 <ul>
   <li onclick="execute_click(this)" data-relative-url="ventus" {{pin_data.PIN_FAN}}>Ventus</li>
   <li onclick="execute_click(this)" data-relative-url="ventnox">Ventnox</li>
+  <li>
+    <form method="GET", action='/set_servo' >
+        <input type="text" id="servo_val" disabled="disabled" style="width:30px">
+        <!-- <label for="servo_value" id="servo_val" class="form_input" style="font-size: 50%;"> Label</label> -->
+        <input type="number" id="servo_value" min="0" max="180" name="servo_value" placeholder="Enter servo value">
+        <input type="submit">
+     </form>
+    </li>
 </ul>
 
 <ul>
@@ -230,6 +243,9 @@ function execute_click(e){
 function set_button_highlight(json_data){
         console.log(json_data);
         for (var redirect_url in json_data){
+          if (redirect_url.includes("data_")){
+            continue;
+          }
           var element = document.querySelectorAll(`[data-relative-url=${redirect_url}]`)[0];
           if (json_data[redirect_url]){
             element.setAttribute("style", "color: #ebcd6e;");
@@ -255,6 +271,12 @@ function update_ldr_value(){
   xhr.send();
 }
 set_button_highlight(JSON.parse('{{pin_data|tojson }}'))
+
+var servo_val_elem = document.getElementById('servo_val');
+console.log(servo_val_elem);
+var servo_value = JSON.parse('{{pin_data|tojson }}')['data_servo_val']
+console.log(servo_value)
+servo_val_elem.value = servo_value
 update_ldr_value()
 </script>
 
