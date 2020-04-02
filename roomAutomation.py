@@ -384,6 +384,11 @@ def set_servo_angle():
 	servo_val = redis_connection.get('SERVO_ANGLE');
 	return redirect("/")
 
+@app.route('/all_off')
+def turn_everything_off():
+    for pin in RELAY_PINS:
+		switch_relay(pin, GPIO_LOW)
+    return jsonify({"all_off": True})
 
 # @app.route('/bluemos')
 # def lightAllBlue() :
@@ -535,6 +540,6 @@ def motion_sensor_action(state):
 
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=12349, debug=True)
-
-# subprocess.call(['./start-serveo.sh'])
+	subprocess.call(['/home/pi/tel.sh'])
+	app.run(host='0.0.0.0', port=1234, debug=True)
+        #subprocess.call(['./tel.sh'])
