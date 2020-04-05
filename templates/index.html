@@ -93,8 +93,6 @@ font-size: 1000%;
         <td>  <input type='text' class="pick" id="monitorBottom" /></td>
         <td></td>
       </tr>
-
-
       <tr style="color: white;">
         <td>Ligth Time</td>
         <td > <input style="width: 40px" onkeydown="sendColors()" type='number'  id="timeOn" value ="0.05" /></td>
@@ -102,11 +100,18 @@ font-size: 1000%;
         <td> <input style="width: 40px" onkeydown="sendColors()" type='number' id="timeOff" value= "0.08" /> </td>
       </tr>
 
+      <tr style="color: white;">
+        <td>Table Color</td>
+        <td > <input type='text' class="table-color-pick" id="tableStrip" /> </td>
+        <td> Bed Light </td>
+        <td > <input type='text' class="bed-color-pick" id="bedStrip" /> </td>
+      </tr>
+
 
     </tbody>
 
   </table>
-<button onclick="sendColors()">Submit</button>
+<button onclick="sendColors();sendStripColor();">Submit</button>
   <!-- <div class="box" id =  "monitorTop">
       <input type='text' class="pick" id="monitorTop" />
   </div> -->
@@ -187,6 +192,41 @@ xhr.send(JSON.stringify(data));
     console.log(data)
   }
 
+  function sendStripColor(color){
+    console.log("ishjfb ");
+    var color = $("#tableStrip").spectrum('get');
+    var  data= {};
+    if (color["_r"] == 255){
+      data["tableStrip"] = "RED"
+    }else if (color["_g"] == 255){
+      data["tableStrip"] = "GREEN"
+    }else if (color["_b"] == 255){
+      data["tableStrip"] = "BLUE"
+    }else {
+      data["tableStrip"] = "BLACK"
+    }
+
+    var color = $("#bedStrip").spectrum('get');
+    console.log(color);
+    if ( (color["_r"] == 255) && (color["_g"] == 255) && (color["_b"] == 255) ){
+      data["bedStrip"] = "WHITE"
+    }else{
+      data["bedStrip"] = "BLACK"
+    }
+    var base_url = window.location.origin;
+    var url = base_url + "/sendStripColor"
+
+   console.log(data)
+   var xhr = new XMLHttpRequest();
+
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('Content-type', 'application/json;charset=UTF-8');
+    xhr.send(JSON.stringify(data));
+
+    // data += "rgbSmallR="+color["_r"]+"&rgbSmallG="+color["_g"]+"&rgbSmallB="+color["_b"]
+
+  }
+
 
 
   $(".pick").spectrum({
@@ -197,7 +237,23 @@ xhr.send(JSON.stringify(data));
     palette: [["red", "rgb(0,255,0)", "blue"]],
     change : sendColors
 });
-  0
+
+$(".table-color-pick").spectrum({
+    preferredFormat: "rgb",
+    color: "blue",
+    showInput: false,
+    showPalette: true,
+    palette: [["red", "rgb(0,255,0)", "blue", "black"]],
+});
+
+$(".bed-color-pick").spectrum({
+    preferredFormat: "rgb",
+    color: "black",
+    showInput: false,
+    showPalette: true,
+    palette: [["white", "black"]],
+});
+  
       
   // $("#rgbLarge").on('change.spectrum', sendColors());
   var base_url = window.location.origin;

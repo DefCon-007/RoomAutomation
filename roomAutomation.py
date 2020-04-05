@@ -19,6 +19,7 @@ from datetime import timedelta as td
 import atexit
 from ldr import LDR
 from redis_client import RedisCache
+import delegator
 
 randomFlag = True
 app = Flask(__name__)
@@ -84,6 +85,12 @@ SERVO_PIN = 18
 FAN_PWM = None
 
 
+LED_STRIP_RED = 15
+LED_STRIP_BLUE = 13
+LED_STRIP_GREEN = 36
+LED_STRIP_WHITE = 37
+LED_STRIP_CONTROLLER = 31
+
 def set_regulator_angle(angle):
 	global FAN_PWM
 	duty = (int(angle) / 18) + 2.5
@@ -120,7 +127,6 @@ def get_current_state():
 	}
 	print(val_dict)
 	return val_dict
-
 
 # motion_sensor_thread = Thread()
 # motion_sensor_thread.start()
@@ -249,6 +255,12 @@ def initialiseGPIO():
     	# Be default keep closed
 		enable_motion_sensors()
 
+	# GPIO for led strips 
+	GPIO.setup(LED_STRIP_RED, GPIO.OUT)
+	GPIO.setup(LED_STRIP_BLUE, GPIO.OUT)
+	GPIO.setup(LED_STRIP_GREEN, GPIO.OUT)
+	GPIO.setup(LED_STRIP_WHITE, GPIO.OUT)
+	GPIO.setup(LED_STRIP_CONTROLLER, GPIO.OUT)
 
 # pixels.clear()
 # pixels.show()  # Make sure to call show() after changing any pixels!
@@ -511,10 +523,41 @@ def setAllColors():
 
 	timeOn = float(data["timeOn"])
 	timeOff = float(data["timeOff"])
-	setAllMonitor()
-	print(m)
+	# setAllMonitor()
 	return "ok"
 
+@app.route('/sendStripColor', methods=["POST"])
+def setStripColors():
+	data = json.loads(request.data)
+	tableColor = data.get("tableStrip")
+	bedStrip = data.get("bedStrip")
+
+	if tableColor == "RED": 
+		switch_relay(LED_STRIP_RED, GPIO_HIGH)
+		switch_relay(LED_STRIP_GREEN, GPIO_LOW)
+		switch_relay(LED_STRIP_BLUE, GPIO_LOW)
+	elif tableColor == "GREEN": 
+		switch_relay(LED_STRIP_GREEN, GPIO_HIGH)
+		switch_relay(LED_STRIP_RED, GPIO_LOW)
+		switch_relay(LED_STRIP_BLUE, GPIO_LOW)
+	elif tableColor == "BLUE": 
+		switch_relay(LED_STRIP_BLUE, GPIO_HIGH)
+		switch_relay(LED_STRIP_GREEN, GPIO_LOW)
+		switch_relay(LED_STRIP_RED, GPIO_LOW)
+	elif tableColor == "BLACK": 
+		switch_relay(LED_STRIP_RED, GPIO_LOW)
+		switch_relay(LED_STRIP_GREEN, GPIO_LOW)
+		switch_relay(LED_STRIP_BLUE, GPIO_LOW)
+
+	if bedStrip == "WHITE": 
+		switch_relay(LED_STRIP_WHITE, GPIO_HIGH)
+	elif bedStrip == "BLACK": 
+		switch_relay(LED_STRIP_WHITE, GPIO_LOW)
+
+	switch_relay(LED_STRIP_CONTROLLER, GPIO_LOW)
+	time.sleep(0.5)
+	switch_relay(LED_STRIP_CONTROLLER, GPIO_HIGH)
+	return "ok"
 
 def removeExtra():
 	rbgObject.setMonitorExtra(0, 0, 0)
@@ -540,6 +583,8 @@ def motion_sensor_action(state):
 
 
 if __name__ == '__main__':
-	subprocess.call(['/home/pi/tel.sh'])
+	command = delegator.run('/home/pi/tel.sh')
+	print(command.out)
+	print(command.err)
 	app.run(host='0.0.0.0', port=1234, debug=True)
         #subprocess.call(['./tel.sh'])
